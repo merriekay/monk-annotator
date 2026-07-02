@@ -44,36 +44,6 @@ Then open the URL Vite prints (usually `http://localhost:5173`).
 `KAGGLE_API_TOKEN` is only ever read server-side (by `server/kaggleRoutes.js`)
 — it's never bundled into the browser code.
 
-## Deploying to a server
-
-For running on a shared/remote machine instead of your own laptop:
-
-1. Copy the project to the server (e.g. `git clone`, `rsync`, or `scp -r`),
-   excluding `node_modules`, `dist`, and `.cache`.
-2. On the server:
-   ```bash
-   npm install
-   npm run build      # builds the frontend into dist/
-   ```
-3. Set up `.env` on the server with `KAGGLE_API_TOKEN`. If the server has a
-   public IP/URL (anyone besides you/your RA could reach it), also set
-   `BASIC_AUTH_USER` and `BASIC_AUTH_PASSWORD` — without them, anyone who
-   finds the URL can burn through your Kaggle quota and view FSboard footage
-   through your server with no login prompt.
-4. Start it:
-   ```bash
-   npm start           # runs server/index.js, serving dist/ + the API on PORT (default 8080)
-   ```
-   Use a process manager (e.g. `pm2 start npm --name mst-tool -- start`, or a
-   `systemd` unit running `npm start`) so it survives reboots/SSH
-   disconnects, and put it behind a reverse proxy (nginx/Caddy) if you want
-   HTTPS on a real domain.
-
-`npm run dev` (Vite) and `npm start` (the standalone server) both serve the
-same `/api/signers` / `/api/frame` routes via the shared
-`server/kaggleRoutes.js` — only the latter adds Basic Auth and serves the
-built static files instead of running Vite's dev server.
-
 ## Loading data
 
 1. **Signer images** — loaded automatically. On startup the app calls
@@ -123,15 +93,6 @@ batch first) to download `mst_annotations.json` in this format:
   }
 ]
 ```
-
-## Methodological caveat
-
-The original FSboard paper assigned Monk labels by **majority vote of 3
-trained raters**. This tool supports **single-rater** annotation, using the
-ITA estimate only as a QC/sanity check to flag likely disagreements — it is
-not a substitute for multi-rater reconciliation. Treat single-rater labels
-produced here as provisional; multi-rater reconciliation is out of scope for
-this tool and left as future work.
 
 ## Project structure
 
