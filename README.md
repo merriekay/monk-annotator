@@ -7,6 +7,8 @@ Signer images are fetched on demand from FSboard's Kaggle dataset through a
 small server-side proxy (see below) rather than requiring the full ~1TB
 dataset to be downloaded.
 
+![mst-annotator](mst-annotator.png)
+
 ## Background: the Monk Skin Tone Scale
 
 The Monk Skin Tone (MST) Scale is a 10-shade scale developed by Harvard
