@@ -52,7 +52,7 @@ async function loadSplitRecords(token, split) {
   return JSON.parse(text)
 }
 
-async function loadSignerClips(token) {
+export async function loadSignerClips(token) {
   const bySigner = new Map()
   for (const split of SPLITS) {
     const records = await loadSplitRecords(token, split)
@@ -69,7 +69,7 @@ async function loadSignerClips(token) {
   return bySigner
 }
 
-async function extractFrame(token, signerId, clip) {
+export async function extractFrame(token, signerId, clip) {
   await mkdir(FRAMES_DIR, { recursive: true })
   const framePath = path.join(FRAMES_DIR, `${signerId}.jpg`)
   if (existsSync(framePath)) return framePath
@@ -97,11 +97,15 @@ async function extractFrame(token, signerId, clip) {
   return framePath
 }
 
-// Builds the two request handlers. Each is a plain (req, res) function
-// written against the Node `connect`-style convention (as used by both Vite's
-// server.middlewares and a bare http.createServer): the caller is expected to
-// have already stripped the route's mount prefix from req.url before calling
-// the frame handler, so it only ever sees "/<signerId>".
+// Builds the two request handlers, served at /signers.json and
+// /frames/<signerId>.jpg -- the same paths used by the static-export build
+// (scripts/build-static-frames.js), so the frontend fetches identical URLs
+// whether it's talking to a live server or plain static files. Each handler
+// is a plain (req, res) function written against the Node `connect`-style
+// convention (as used by both Vite's server.middlewares and a bare
+// http.createServer): the caller is expected to have already stripped the
+// route's mount prefix from req.url before calling the frame handler, so it
+// only ever sees "/<signerId>.jpg".
 export function createKaggleRoutes(token) {
   // Loading the metadata files happens once per server run; cache the
   // in-flight/completed promise so concurrent requests share it.
@@ -127,7 +131,9 @@ export function createKaggleRoutes(token) {
   }
 
   async function handleFrame(req, res) {
-    const signerId = decodeURIComponent(req.url.replace(/^\//, '').split('?')[0])
+    const signerId = decodeURIComponent(
+      req.url.replace(/^\//, '').split('?')[0].replace(/\.jpg$/, ''),
+    )
     try {
       const clips = await getSignerClips()
       const clip = clips.get(signerId)

@@ -11,12 +11,12 @@ export function kaggleProxyPlugin(token) {
     configureServer(server) {
       if (!token) {
         console.warn(
-          '[kaggle-proxy] KAGGLE_API_TOKEN is not set in .env -- /api/signers and /api/frame will fail',
+          '[kaggle-proxy] KAGGLE_API_TOKEN is not set in .env -- /signers.json and /frames/*.jpg will fail',
         )
       }
 
-      server.middlewares.use('/api/signers', handleSigners)
-      server.middlewares.use('/api/frame', handleFrame)
+      server.middlewares.use('/signers.json', handleSigners)
+      server.middlewares.use('/frames', handleFrame)
     },
   }
 }

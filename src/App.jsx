@@ -19,12 +19,15 @@ function App() {
 
   // FSboard (124 signers across its train/validation/test splits) lives on
   // Kaggle as raw video, not per-signer images -- too large to download
-  // wholesale. /api/signers (server/kaggleProxy.js) lists every signer ID
-  // across all three splits; each signer's image is then lazy-loaded on
-  // demand from /api/frame/<signerId>, which downloads just that signer's
-  // clip and extracts one frame, caching it on disk for next time.
+  // wholesale. /signers.json lists every signer ID across all three splits;
+  // each signer's image is then lazy-loaded on demand from
+  // /frames/<signerId>.jpg. In dev/production-server mode these are live
+  // routes (server/kaggleRoutes.js) that download that signer's clip and
+  // extract one frame on first request; in a static export
+  // (scripts/build-static-frames.js) they're plain pre-baked files. Either
+  // way the frontend fetches the same URLs.
   useEffect(() => {
-    fetch('/api/signers')
+    fetch('/signers.json')
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load signer list (HTTP ${res.status})`)
         return res.json()
@@ -33,7 +36,7 @@ function App() {
         setSigners(
           signerIds.map((signerId) => ({
             signerId,
-            imageUrl: `/api/frame/${signerId}`,
+            imageUrl: `/frames/${signerId}.jpg`,
             monkLabel: null,
             itaLabel: null,
             flagged: false,

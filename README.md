@@ -47,15 +47,15 @@ Then open the URL Vite prints (usually `http://localhost:5173`).
 ## Loading data
 
 1. **Signer images** — loaded automatically. On startup the app calls
-   `/api/signers`, which lists every signer ID across FSboard's
+   `/signers.json`, which lists every signer ID across FSboard's
    train/validation/test splits (124 signers total, no overlap between
    splits). Each signer's image is then fetched lazily, one at a time, from
-   `/api/frame/<signerId>` as you navigate to them: the proxy downloads just
-   that signer's first video clip from Kaggle, extracts a single frame from
-   its midpoint with `ffmpeg`, and caches the result in `.cache/frames/` so
-   it's instant on subsequent loads. The first time you view a given signer,
-   expect a few seconds' delay while the clip downloads and the frame is
-   extracted.
+   `/frames/<signerId>.jpg` as you navigate to them: in dev/production-server
+   mode this downloads that signer's first video clip from Kaggle, extracts a
+   single frame from its midpoint with `ffmpeg`, and caches the result in
+   `.cache/frames/` so it's instant on subsequent loads (expect a few
+   seconds' delay the first time you view a given signer). In a static
+   export (see below) these are just pre-baked files, with no delay at all.
 2. **ITA labels (optional)** — click "Load ita_labels.json" and select a
    JSON file mapping signer ID to an ITA-estimated MST label:
 
@@ -94,15 +94,42 @@ batch first) to download `mst_annotations.json` in this format:
 ]
 ```
 
+## Sharing a static build with collaborators
+
+If your collaborators don't have a Kaggle token or a dev environment set up,
+you don't need either running server mode for them — you can bake every
+signer's frame into plain static files once, then host the result anywhere
+that serves static HTML (no Node, no Kaggle token, no `ffmpeg` required on
+the server or by your collaborators):
+
+```bash
+npm run build:static
+```
+
+This runs `scripts/build-static-frames.js` (fetching/extracting any signer
+frames not already cached, same as browsing normally would, just for all 124
+up front) into `public/frames/*.jpg` and `public/signers.json`, then runs
+`vite build` so they're bundled into `dist/` alongside the app. Upload the
+contents of `dist/` to any static host (e.g. your `public_html/`) and share
+the URL — collaborators just open it in a browser.
+
+Note: the resulting URL is unauthenticated and reachable by anyone who has
+it (no login prompt), same as any other file in `public_html/`. Re-run
+`npm run build:static` and re-upload if FSboard's data changes or you want
+to pick different representative clips/frames.
+
 ## Project structure
 
 ```
 server/
-  kaggleRoutes.js         shared route handlers: /api/signers and
-                           /api/frame/<signerId>, backed by the Kaggle API
+  kaggleRoutes.js         shared route handlers: /signers.json and
+                           /frames/<signerId>.jpg, backed by the Kaggle API
   kaggleProxy.js          Vite dev-server adapter (used by `npm run dev`)
   index.js                standalone production server + Basic Auth
                            (used by `npm start`, after `npm run build`)
+scripts/
+  build-static-frames.js  prefetches every signer's frame into public/, for
+                           a fully static export (used by `npm run build:static`)
 src/
   constants.js          MST label list, official hex colors, flag threshold
   utils/mst.js           flag calculation, JSON export

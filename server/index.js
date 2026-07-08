@@ -83,10 +83,10 @@ const server = createServer(async (req, res) => {
   const { pathname } = new URL(req.url, `http://${req.headers.host}`)
 
   try {
-    if (pathname === '/api/signers') {
+    if (pathname === '/signers.json') {
       await handleSigners(req, res)
-    } else if (pathname.startsWith('/api/frame/')) {
-      req.url = pathname.slice('/api/frame'.length)
+    } else if (pathname.startsWith('/frames/')) {
+      req.url = pathname.slice('/frames'.length)
       await handleFrame(req, res)
     } else {
       await serveStatic(pathname, res)
